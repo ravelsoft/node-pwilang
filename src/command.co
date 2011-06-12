@@ -1,0 +1,38 @@
+`#!/usr/bin/env node`
+
+argv = require "optimist"
+    .usage "Transform a .pwi file to HTML/XML\nUsage: $0"
+    .argv
+
+
+fs = require "fs"
+sys = require "sys"
+pwilang = require "./pwilang"
+
+console.dir argv
+if argv.length >= 3
+
+    files = process.argv.slice 2
+    i = 0;
+    f = null;
+
+    for i from 0 to files.length - 1
+        (err, data) <- fs.readFile files[i], 'utf-8', ...
+        if err
+            console.warn err.message
+        else
+            res = pwilang.parse data
+            sys.print res
+else
+    process.stdin.resume ()
+    process.stdin.setEncoding "utf-8"
+
+    # Read our file from stdin
+    data = ""
+    process.stdin.on "data", (chunk) ->
+        data += chunk
+
+    # When read, process it.
+    <- process.stdin.on "end"
+    sys.print (pwilang.parse data)
+
