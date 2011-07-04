@@ -4,7 +4,11 @@ optimist = require "optimist"
     .usage "Transform a pwilang formatted file or stdin to HTML/XML\nUsage: $0 [options] file\n       $0 [options]"
     .boolean "help"
     .alias "help", "h"
-    .describe "help" "Show this help"
+    .describe "help", "Show this help"
+
+    .boolean "inline"
+    .alias "inline", "i"
+    .describe "inline", "Suppress the indentation in the output file"
 argv = optimist.argv
 
 fs = require "fs"
@@ -16,16 +20,15 @@ if argv.help
     process.exit 0
 
 if argv._.length == 1
-    files = process.argv.slice 2
     i = 0;
     f = null;
 
-    for file of files
+    for file of argv._
         (err, data) <- fs.readFile file, 'utf-8', ...
         if err
             console.warn err.message
         else
-            res = pwilang.parse data
+            res = pwilang.parse data, inline: argv.inline
             sys.print res
 else
     process.stdin.resume()
@@ -38,5 +41,5 @@ else
 
     # When read, process it.
     <- process.stdin.on "end", ...
-    sys.print (pwilang.parse data)
+    sys.print (pwilang.parse data, inline: argv.inline)
 
