@@ -9,7 +9,7 @@ argv = optimist.argv
 
 fs = require "fs"
 sys = require "sys"
-pwilang = require "./pwilang"
+pwilang = require "./grammar"
 
 if argv.help
     console.log optimist.help()

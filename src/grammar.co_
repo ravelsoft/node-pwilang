@@ -1,0 +1,7 @@
+
+function parse (data, options) ->
+    # Grammar is replaced at compile time by the compiled grammar.
+    parser = __grammar__
+    parser.parse data
+
+exports.parse = parse
