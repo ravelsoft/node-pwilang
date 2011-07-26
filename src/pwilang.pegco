@@ -106,7 +106,9 @@ lines
     / line:line
 
 line
-    = end:endline? sp:space? tag:tag contents:anything? { set_indent sp.length; res = "#{check_tag_stack()}#{check_contents end}#{if options.inline then "" else sp}#{tag.opening()}#{contents}"; stack_tag tag; push_contents contents; return res }
+    = end:endline? sp:space? tag:tag_inline contents:anything? { set_indent sp.length; res = "#{check_tag_stack()}#{check_contents end}#{if options.inline then "" else sp}#{tag}#{contents}"; push_contents "#{tag}#{contents}"; return res }
+
+    / end:endline? sp:space? tag:tag contents:anything? { set_indent sp.length; res = "#{check_tag_stack()}#{check_contents end}#{if options.inline then "" else sp}#{tag.opening()}#{contents}"; stack_tag tag; push_contents contents; return res }
 
     / end:endline? sp:space? contents:anything { set_indent sp.length; res = "#{check_tag_stack()}#{check_contents end}#{if options.inline then "" else sp}#{contents}"; push_contents contents; return res }
 
