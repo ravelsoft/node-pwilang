@@ -160,7 +160,7 @@ tag_to_eol_inline
     = tag:tag anything:anything_inline? { return "#{tag.opening()}#{anything}#{tag.closing()}" }
 
 tag_inline
-    = tag:tag '[' contents:anything_inline ']' { return "#{tag.opening()}#{contents}#{tag.closing()}" }
+    = tag:tag '[' contents:anything_inline? ']' { return "#{tag.opening()}#{contents}#{tag.closing()}" }
 
 selfclosing_tag
     = "@/" ident:identifier mods:modifiers? space? { return Tag name: ident, mods: mods; .selfclose() }
