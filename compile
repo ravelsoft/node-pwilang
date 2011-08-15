@@ -73,7 +73,7 @@ pegjs = require "pegjs"
 coco = require "coco"
 compile_grammar = ->
     console.log "Recompiling Grammar"
-    (err, data) <- fs.readFile "./src/pwilang.pegco", "utf-8"
+    (err, data) <- fs.readFile "./src/grammar.pegco", "utf-8"
     throw err if err
 
     # Compile all the coco parts to JS before giving it to pegjs.
@@ -101,20 +101,12 @@ compile_grammar = ->
         console.log e.message
         return
     
-    grammar_source = parser.toSource()
+    grammar_source = "module.exports = #{parser.toSource()}; var _parse = module.exports.parse; module.exports.parse = function (input, startRule, options) {
+        if (startRule instanceof Object) { options = startRule; startRule = undefined; }
+        return _parse (input, startRule, options);
+    };"
 
-    (err, data) <- fs.readFile "./src/grammar.co_", "utf-8"
-    throw err if err
-
-    try
-        js = coco.compile data
-    catch e
-        console.log e.message
-        return
-
-    final_data = js.replace /__grammar__/, grammar_source
-
-    (err) <- fs.writeFile "./lib/grammar.js", final_data
+    (err) <- fs.writeFile "./lib/grammar.js", grammar_source
     throw err if err
     
 

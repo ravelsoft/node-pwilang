@@ -13,7 +13,7 @@ argv = optimist.argv
 
 fs = require "fs"
 sys = require "sys"
-pwilang = require "./grammar"
+grammar = require "./grammar"
 
 if argv.help
     console.log optimist.help()
@@ -28,7 +28,7 @@ if argv._.length == 1
         if err
             console.warn err.message
         else
-            res = pwilang.parse data, inline: argv.inline
+            res = grammar.parse data, inline: argv.inline
             sys.print res
 else
     process.stdin.resume()
@@ -41,5 +41,5 @@ else
 
     # When read, process it.
     <- process.stdin.on "end", ...
-    sys.print (pwilang.parse data, inline: argv.inline)
+    sys.print (grammar.parse data, inline: argv.inline)
 

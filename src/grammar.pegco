@@ -3,7 +3,9 @@
 
     @author Christophe Eymard <christophe@ravelsoft.com>
 */
-{   
+{
+options = arguments[2] ? {};
+
 current_indent = 0
 
 function set_indent (indent) ->
