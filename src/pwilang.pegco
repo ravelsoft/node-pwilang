@@ -176,10 +176,18 @@ modifiers
 mod
     = space? "\." ident:identifier { return mod_class ident }
     / space? "#" ident:identifier { return id: ident }
-    / space? ident:identifier "=" contents:identifier { r = {}; r[ident] = contents; return r }
+    / space? ident:identifier "=" contents:unquoted_contents_rec { r = {}; r[ident] = contents; return r }
     / space? ident:identifier "=\"" contents:anything_dquoted? "\"" { r = {}; r[ident] = contents; return r }
     / space? ident:identifier "=\'" contents:anything_squoted? "\'" { r = {}; r[ident] = contents; return r }
     / space? "\\" ident:identifier { r = {}; r[ident] = ""; return r }
+
+unquoted_contents_rec
+    = a:unquoted_contents b:unquoted_contents_rec { return "#{a}#{b}" }
+    / unquoted_contents
+
+unquoted_contents
+    = "\\ " { return " " }
+    / [^ \n\t]
 
 space
     = sp:[ \t]+ { return sp.join "" }
