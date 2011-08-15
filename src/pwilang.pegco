@@ -137,14 +137,14 @@ anything_inline
     / any:any_inline
 
 any_inline
-    = "\\@"
+    = "\\@" { return '@' }
     / tag_inline
     / tag_to_eol_inline
     / selfclosing_tag
     / !endline character:. { return character }
 
 any
-    = "\\@"
+    = "\\@" { return '@' }
     / tag_inline
     / tag_to_eol
     / selfclosing_tag
