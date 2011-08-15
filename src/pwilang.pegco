@@ -58,7 +58,10 @@ function Tag (that) ->
 
         for x in mods
             if mods.hasOwnProperty x and x != ",class"
-                s += " #{x}=\"#{mods[x]}\""
+                if mods[x]
+                    s += " #{x}=\"#{mods[x]}\""
+                else
+                    s += " #{x}"
 
         if mods[",class"]
             s += " class=\"#{mods[",class"].join (" ")}\""
@@ -176,6 +179,7 @@ mod
     / space? ident:identifier "=\"" contents:anything_dquoted "\"" { r = {}; r[ident] = contents; return r }
     / space? ident:identifier "=\'" contents:anything_squoted "\'" { r = {}; r[ident] = contents; return r }
     / space? ident:identifier ("=\"\""/"=''") { r = {}; r[ident] = ""; return r }
+    / space? "\\" ident:identifier { r = {}; r[ident] = ""; return r }
 
 space
     = sp:[ \t]+ { return sp.join "" }
