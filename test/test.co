@@ -37,6 +37,9 @@ suite.addBatch do
             equal "<div><h1>{% block title %}{% endblock %}</h1> Hello World</div>",
                 parse "@div @h1 [% block title] Hello World", jinja: true
 
+        "original blocks stay the same": ->
+            equal "{% b %}", parse "{% b %}", jinja: true
+
         "has variables !": ->
             equal "{{ foo }}", parse "$foo", jinja: true
 

@@ -131,7 +131,7 @@ line
         return res 
 
     # When in jinja mode, try to parse a single line operator.
-    / &{ return options.jinja; } end:endline? sp:space? "%" spaceless:"-"? space? ident:identifier contents:anything? -> 
+    / &{ return options.jinja; } end:endline? sp:space? !"{" "%" spaceless:"-"? space? ident:identifier contents:anything? -> 
         set_indent sp.length
         sp = "" if options.inline
         res = "#{check_tag_stack()}#{check_contents end}#{sp}{%#{spaceless} #{ident}#{contents} #{spaceless}%}"
@@ -205,12 +205,39 @@ tag_inline
     = tag:tag '[' sp:space? ']' -> return "#{tag.opening()}#{sp}#{tag.closing()}" 
     / tag:tag '[' contents:anything_inline ']' -> return "#{tag.opening()}#{contents}#{tag.closing()}" 
 
+jinja_tag_contents
+    = a:jinja_tag_contents_req b:jinja_tag_contents -> return a + b
+    / jinja_tag_contents_req
+
+jinja_tag_contents_req
+    = !endline a:. -> return a
+
+jinja_tag_contents_inline
+    = a:jinja_tag_contents_inline_req b:jinja_tag_contents_inline -> return a + b
+    / jinja_tag_contents_inline_req
+
+jinja_tag_contents_inline_req
+    = !endline !"]" a:. -> return a
+
+jinja_tag_contents_original
+    = a:jinja_tag_contents_original_req b:jinja_tag_contents_original -> return a + b
+    / jinja_tag_contents_original_req
+
+jinja_tag_contents_original_req
+    = !"%}" a:. -> return a
+
+jinja_tag_original
+    = &{ return options.jinja; } "{%" contents:jinja_tag_contents_original? "%}" ->
+        return "{%#{contents}%}"
+
 jinja_tag_inline_eol
-    = &{ return options.jinja; } "\%" spaceless:"-"? space? ident:identifier contents:anything? ->
+    = jinja_tag_original
+    / &{ return options.jinja; } "\%" spaceless:"-"? space? ident:identifier contents:jinja_tag_contents? ->
         return "{%#{spaceless} #{ident}#{contents} %}{% end#{ident} #{spaceless}%}"
 
 jinja_tag_inline
-    = &{ return options.jinja; } "\%" spaceless:"-"? space? ident:identifier contents:anything_inline? ->
+    = jinja_tag_original
+    / &{ return options.jinja; } "\%" spaceless:"-"? space? ident:identifier contents:jinja_tag_contents_inline? ->
         return "{%#{spaceless} #{ident}#{contents} %}{% end#{ident} #{spaceless}%}"
 
 selfclosing_tag
