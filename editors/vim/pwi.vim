@@ -35,10 +35,10 @@ syn match   bigTagRule  '@/\?[$[:alnum:]_-]\+\(\s*\.[$[:alnum:]_-]\+\|\s*#[$[:al
 syn match   tagRule     '@/\?[$a-zA-Z0-9_-]\+' contained contains=@NoSpell
 syn match   htmlCharRule '&[a-z]\+;' contains=@NoSpell
 
-syn match   idRule  "\#[$[:alnum:]_-]\+" contained contains=@NoSpell,variableRule
-syn match   classRule   '\.[$[:alnum:]_-]\+' contained contains=@NoSpell,variableRule
-syn match   keyRule     "[$[:alnum:]_-]\+="me=e-1 contained contains=@NoSpell,variableRule
-syn match   keyRule     "\\[$/[:alnum:]_-]\+" contained contains=@NoSpell,variableRule
+syn match   idRule  "\#[$()\[\]\"\'[:alnum:]_-]\+" contained contains=@NoSpell,variableRule
+syn match   classRule   '\.[$()\[\]\"\'[:alnum:]_-]\+' contained contains=@NoSpell,variableRule
+syn match   keyRule     "[$()\[\]\"\'[:alnum:]_-]\+="me=e-1 contained contains=@NoSpell,variableRule
+syn match   keyRule     "\\[$()\[\]\"\'/[:alnum:]_-]\+" contained contains=@NoSpell,variableRule
 syn region  valueRule  start=+="+ms=s+1 end=+"+ skip=+\\"+ contained contains=@NoSpell,escapedRule,bigTagRule,variableRule
 syn region  valueRule  start=+='+ end=+'+ skip=+\\"+ contained contains=@NoSpell,escapedRule,bigTagRule,variableRule
 syn match   valueRule "=[^\"']\(\\ \|[^ \t]\)*"ms=s+1  contained contains=@NoSpell,variableRule
