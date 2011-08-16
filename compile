@@ -69,6 +69,17 @@ function wait_for_current_executions (callback) ->
         callback()
 
 
+re_coco_rule = //^(\u0020*[=\/].*?)?\u0020*->\s*$
+    ([\t\u0020]*\n)*     # Ignoring the first few lines
+    ^([\t\u0020]*)([^\/=][^\n]*\n)  # First line with content. The group (3) determines indentation.
+    ((
+        [\t\u0020]*\n         # Empty line
+    |
+        ^\3([^\/=][^\n]*\n)   # Normal line
+    )*)//m
+
+re_coco_rule_single = /^( *[=\/].*?)?[\t ]*->[\t ]*(\S.+)$/m
+
 pegjs = require "pegjs"
 coco = require "coco"
 compile_grammar = ->
@@ -76,24 +87,32 @@ compile_grammar = ->
     (err, data) <- fs.readFile "./src/grammar.pegco", "utf-8"
     throw err if err
 
-    # Compile all the coco parts to JS before giving it to pegjs.
-    cocoed_data = data.replace //
-            {
-                (
-                    {\s*}  |
-                    \#{ [^}]* }  |
-                    [^}])*
-            }//g, (txt) ->
-
-        coco_data = txt.replace /^{\s*/, ""
-            .replace /\s*}$/, ""
+    compile_coco = (txt) ->
+        coco_data = txt.replace /^\.{\s*/, ""
+            .replace /\s*}\.$/, ""
  
         try
             compiled = coco.compile coco_data, bare: true
         catch e
-            console.log coco_data
+            console.log "Error with: #{coco_data}"
             throw e
-        return "{#{compiled}}"
+        return "{\n  #{compiled}\n}\n"
+
+    # Compile all the coco parts to JS before giving it to pegjs.
+
+    cocoed_data = data.replace /^ *#.*?\n/gm, '\n' # Removing (simple) comments
+
+    while (match = re_coco_rule_single.exec cocoed_data)
+        index = match.0.indexOf "->"
+        replacement = compile_coco match.0.substr index + 2
+        before = match.0.substr 0, index
+        cocoed_data = "#{cocoed_data.substr 0, match.index}#{before}#{replacement}#{cocoed_data.substr match.index + match.0.length}" 
+
+    while (match = re_coco_rule.exec cocoed_data)
+        index = match.0.indexOf "->"
+        replacement = compile_coco match.0.substr index + 2
+        before = match.0.substr 0, index
+        cocoed_data = "#{cocoed_data.substr 0, match.index}#{before}#{replacement}#{cocoed_data.substr match.index + match.0.length}" 
 
     try
         parser = pegjs.buildParser cocoed_data
