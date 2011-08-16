@@ -9,6 +9,11 @@ optimist = require "optimist"
     .boolean "inline"
     .alias "inline", "i"
     .describe "inline", "Suppress the indentation in the output file"
+
+    .boolean "jinja"
+    .alias "jinja", "j"
+    .describe "jinja", "Activate the jinja mode"
+
 argv = optimist.argv
 
 fs = require "fs"
@@ -28,7 +33,7 @@ if argv._.length == 1
         if err
             console.warn err.message
         else
-            res = grammar.parse data, inline: argv.inline
+            res = grammar.parse data, inline: argv.inline, jinja: argv.jinja
             sys.print res
 else
     process.stdin.resume()
@@ -41,5 +46,5 @@ else
 
     # When read, process it.
     <- process.stdin.on "end", ...
-    sys.print (grammar.parse data, inline: argv.inline)
+    sys.print grammar.parse data, inline: argv.inline, jinja: argv.jinja
 
