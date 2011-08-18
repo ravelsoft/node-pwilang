@@ -27,15 +27,18 @@ suite.addBatch do
 
     "In Jinja Mode": do
         "tag blocks can be defined with a leading %": ->
-            equal "{% raw %}{% endraw %}", parse "% raw", jinja: true
+            equal "{% raw %}", parse "% raw", jinja: true
+
+        "auto closing tag blocks can be defined with a leading %%": ->
+            equal "{% raw %}{% endraw %}", parse "%% raw", jinja: true
 
         "blocks can be on the same line as other content": ->
             equal "<div>{% block contents %}{% endblock %}</div>",
-                parse "@div % block contents", jinja: true
+                parse "@div %% block contents", jinja: true
 
         "blocks can be in an inline tag.": ->
             equal "<div><h1>{% block title %}{% endblock %}</h1> Hello World</div>",
-                parse "@div @h1 [% block title] Hello World", jinja: true
+                parse "@div @h1 [%% block title] Hello World", jinja: true
 
         "original blocks stay the same": ->
             equal "{% b %}", parse "{% b %}", jinja: true
@@ -86,7 +89,7 @@ suite.addBatch do
             equal "<a {{ a }}=\"{{ c }}\" {{ b }}></a>", parse "@a $a=$c \\$b", jinja: true
 
         "do not interfere with indentation": ->
-            equal "<p>\n  {% if toto %}\n    hello !{% endif %}</p>", parse "@p\n  % if toto\n    hello !", jinja: true
+            equal "<p>\n  {% if toto %}\n    hello !{% endif %}</p>", parse "@p\n  %% if toto\n    hello !", jinja: true
 
         "variables can nest parenthesis": ->
             equal "{{ a()(b()) }}", parse "$a()(b())", jinja: true
