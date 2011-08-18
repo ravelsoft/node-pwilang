@@ -2,17 +2,17 @@
 
 optimist = require "optimist"
     .usage "Transform a pwilang formatted file or stdin to HTML/XML\nUsage: $0 [options] file\n       $0 [options]"
-    .boolean "help"
-    .alias "help", "h"
-    .describe "help", "Show this help"
+    .boolean [\help, \inline, \jinja, \j, \i]
 
-    .boolean "inline"
-    .alias "inline", "i"
-    .describe "inline", "Suppress the indentation in the output file"
+    .alias do
+        help: \h
+        inline: \i
+        jinja: \j
 
-    .boolean "jinja"
-    .alias "jinja", "j"
-    .describe "jinja", "Activate the jinja mode"
+    .describe do
+        help: "Show this help"
+        inline: "Suppress the indentation in the output file"
+        jinja: "Activate the jinja mode"
 
 argv = optimist.argv
 
@@ -24,10 +24,7 @@ if argv.help
     console.log optimist.help()
     process.exit 0
 
-if argv._.length == 1
-    i = 0;
-    f = null;
-
+if argv._.length >= 1
     for file of argv._
         (err, data) <- fs.readFile file, 'utf-8', ...
         if err
@@ -45,6 +42,6 @@ else
         data += chunk
 
     # When read, process it.
-    <- process.stdin.on "end", ...
+    <- process.stdin.on "end"
     sys.print grammar.parse data, inline: argv.inline, jinja: argv.jinja
 
