@@ -111,6 +111,10 @@ suite.addBatch do
         "variables don't go too far": ->
             equal "adfaft{{ tptp(to)(df) }}toto", parse "adfaft$(tptp(to)(df))toto", jinja: true
 
+        "jinja comments are left alone": ->
+            equal "Hello {# World #}", parse "Hello {# World #}", jinja: true
+            equal "end of comment #}", parse "end of comment #}", jinja: true
+
 if argv.help
     console.log optimist.usage()
     process.exit 0

@@ -186,6 +186,8 @@ any
 
 escaped
     = "\\" a:[@%$\u007b] -> return a
+    / "{#" -> return "\u007b#"
+    / "#}" -> return "#\u007d"
 
 tag
     = "@" ident:identifier mods:modifiers? space? -> return Tag name: ident, mods: mods
