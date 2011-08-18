@@ -160,16 +160,6 @@ anything
     = any:any anything:anything -> return "#{any}#{anything}"
     / any:any
 
-anything_dquoted
-    = any:any !"\"" anything:anything_dquoted -> return "#{any}#{anything}"
-    / "\\\""
-    / any:any
-
-anything_squoted
-    = any:any !"\'" anything:anything_squoted -> return "#{any}#{anything}"
-    / "\\'"
-    / any:any
-
 anything_inline
     = any:any_inline !"]" anything:anything_inline -> return "#{any}#{anything}"
     / "\\]"
@@ -186,6 +176,7 @@ any_inline
 
 any
     = escaped
+    / comment
     / jinja_variable
     / jinja_tag_inline_eol
     / tag_inline
@@ -267,9 +258,29 @@ mod
     = space? "\." ident:mod_ident -> return mod_class ident
     / space? "#" ident:mod_ident -> return id: ident
     / space? ident:mod_ident "=\"" contents:anything_dquoted? "\"" -> r = {}; r[ident] = contents; return r
-    / space? ident:mod_ident "=\'" contents:anything_squoted? "\'" -> r = {}; r[ident] = contents; return r
+    / space? ident:mod_ident "='" contents:anything_squoted? "'" -> r = {}; r[ident] = contents; return r
     / space? ident:mod_ident "=" contents:unquoted_contents_rec -> r = {}; r[ident] = contents; return r
     / space? "\\" ident:mod_ident -> r = {}; r[ident] = ""; return r
+
+anything_dquoted
+    = any:anything_dquoted_req !"\"" anything:anything_dquoted -> return "#{any}#{anything}"
+    / any:anything_dquoted_req
+
+anything_dquoted_req
+    = "\\\""
+    / escaped
+    / jinja_variable
+    / [^\"]
+
+anything_squoted
+    = any:anything_squoted_rec !"'" anything:anything_squoted -> return "#{any}#{anything}"
+    / any:anything_squoted_rec
+
+anything_squoted_rec
+    = "\\'"
+    / escaped
+    / jinja_variable
+    / [^\']
 
 unquoted_contents_rec
     = a:unquoted_contents b:unquoted_contents_rec -> return "#{a}#{b}"
@@ -324,3 +335,9 @@ variable_any_paren_rec
 variable_ident
     = id:([a-zA-Z_][a-zA-Z0-9_]*) -> return "#{id.0}#{if id.1 then id.1.join "" else ""}"
 
+comment
+    = "#" comment_contents -> return ""
+
+comment_contents
+    = !endline . comment_contents
+    / !endline .
