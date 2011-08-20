@@ -185,7 +185,7 @@ any
     / !endline character:. -> return character
 
 escaped
-    = "\\" a:[@%$\u007b] -> return a
+    = "\\" a:[@%$\u007b ] -> return a
     / "{#" -> return "\u007b#"
     / "#}" -> return "#\u007d"
 
@@ -203,25 +203,13 @@ tag_inline
     / tag:tag '[' contents:anything_inline ']' -> return "#{tag.opening()}#{contents}#{tag.closing()}"
 
 jinja_tag_contents
-    = a:jinja_tag_contents_req b:jinja_tag_contents -> return a + b
-    / jinja_tag_contents_req
-
-jinja_tag_contents_req
-    = !endline a:. -> return a
+    = seq:(!endline a:.)+ -> if seq then return (item.1 for item of seq).join "" else return ""
 
 jinja_tag_contents_inline
-    = a:jinja_tag_contents_inline_req b:jinja_tag_contents_inline -> return a + b
-    / jinja_tag_contents_inline_req
-
-jinja_tag_contents_inline_req
-    = !endline !"]" a:. -> return a
+    = seq:(!endline !"]" a:.)+ -> if seq then return (item.2 for item of seq).join "" else return ""
 
 jinja_tag_contents_original
-    = a:jinja_tag_contents_original_req b:jinja_tag_contents_original -> return a + b
-    / jinja_tag_contents_original_req
-
-jinja_tag_contents_original_req
-    = !"%}" a:. -> return a
+    = seq:(!"%}" a:.)+ -> if seq then return (item.1 for item of seq).join "" else return ""
 
 jinja_tag_original
     = &{ return options.jinja; } "{%" contents:jinja_tag_contents_original? "%}" ->
@@ -240,74 +228,42 @@ jinja_tag_inline
         return "{%#{spaceless} #{ident}#{contents} %}#{endtag}" if end
 
 selfclosing_tag
-    = "@/" ident:identifier mods:modifiers? space? -> return Tag name: ident, mods: mods; .selfclose()
-
-/* Modifiers are Ids, Classes and attributes, in short everything that will end up inside the tag. */
-modifiers
-    = mod:mod modifiers:modifiers -> return merge_modifiers mod, modifiers
-    / mod
+    = "@/" ident:identifier mods:modifiers? space? -> return Tag name: ident, mods: mods .selfclose()
 
 mod_ident
-    = a:mod_ident_rec b:mod_ident -> return a + b
-    / mod_ident_rec
+    = idents:(identifier / escaped / jinja_variable)+ -> return idents.join ""
 
-mod_ident_rec
-    = identifier
-    / escaped
-    / jinja_variable
+# Modifiers are Ids, Classes and attributes, in short everything that will end up inside the tag.
+modifiers
+    = modifiers:(mod)+ -> 
+        mods = modifiers[modifiers.length - 1]
+        for i from modifiers.length - 2 to 0 by -1
+            mods = merge_modifiers modifiers[i], mods
+        return mods
 
 mod
     = space? "\." ident:mod_ident -> return mod_class ident
     / space? "#" ident:mod_ident -> return id: ident
     / space? ident:mod_ident "=\"" contents:anything_dquoted? "\"" -> r = {}; r[ident] = contents; return r
     / space? ident:mod_ident "='" contents:anything_squoted? "'" -> r = {}; r[ident] = contents; return r
-    / space? ident:mod_ident "=" contents:unquoted_contents_rec -> r = {}; r[ident] = contents; return r
+    / space? ident:mod_ident "=" contents:unquoted_contents -> r = {}; r[ident] = contents; return r
     / space? "\\" ident:mod_ident -> r = {}; r[ident] = ""; return r
 
 anything_dquoted
-    = any:anything_dquoted_req !"\"" anything:anything_dquoted -> return "#{any}#{anything}"
-    / any:anything_dquoted_req
-
-anything_dquoted_req
-    = "\\\""
-    / escaped
-    / jinja_variable
-    / [^\"]
+    = string_contents:("\\\"" / escaped / jinja_variable / [^\"])+ -> return string_contents.join ""
 
 anything_squoted
-    = any:anything_squoted_rec !"'" anything:anything_squoted -> return "#{any}#{anything}"
-    / any:anything_squoted_rec
-
-anything_squoted_rec
-    = "\\'"
-    / escaped
-    / jinja_variable
-    / [^\']
-
-unquoted_contents_rec
-    = a:unquoted_contents b:unquoted_contents_rec -> return "#{a}#{b}"
-    / unquoted_contents
+    = string_contents:("\\'" / escaped / [^\'])+ -> return string_contents.join ""
 
 unquoted_contents
-    = "\\ " -> return " "
-    / escaped
-    / jinja_variable
-    / [^ \n\t]
-
-space
-    = sp:[ \t]+ -> return sp.join ""
-
-endline
-    = end1:"\n" sp:space? end:endline -> return if options.inline then " " else "#{end1}#{sp}#{end}"
-    / "\n" -> return if options.inline then " " else "\n"
+    = contents:(escaped / jinja_variable / [^ \n\t])+ -> return contents.join ""
 
 jinja_variable
     = &{ return options.jinja; } "$" ident:variable_ident cnt:variable_contents? -> return "{{ #{ident}#{cnt} }}"
     / &{ return options.jinja; } "$(" cnt:variable_contents ")" -> return "{{ #{cnt} }}"
 
 variable_contents
-    = id:variable_contents_rec v:variable_contents -> return "#{id}#{v}"
-    / variable_contents_rec
+    = contents:(variable_contents_rec)+ -> return contents.join ""
 
 variable_contents_rec
     = "." v:variable_contents -> return ".#{v}"
@@ -317,29 +273,21 @@ variable_contents_rec
     / variable_ident
 
 variable_any_bracket
-    = a:variable_any_bracket_rec b:variable_any_bracket -> return a + b
-    / variable_any_bracket_rec
-
-variable_any_bracket_rec
-    = "\\]"
-    / "[" a:variable_any_bracket? "]" -> return "[#{a}]"
-    / !"]" a:. -> return a
+    = bracket_contents:("\\]" / "[" a:variable_any_bracket? "]" { return "[" + a + "]" } / !"]" a:. { return a })+ -> return bracket_contents.join ""
 
 variable_any_paren
-    = a:variable_any_paren_rec b:variable_any_paren -> return a + b
-    / variable_any_paren_rec
-
-variable_any_paren_rec
-    = "\\)"
-    / "(" a:variable_any_paren? ")" -> return "(#{a})"
-    / !")" a:. -> return a
+    = paren_contents: ("\\)" / "(" a:variable_any_paren? ")" { return "(" + a +")" } / !")" a:. { return a })+ -> return paren_contents.join ""
 
 variable_ident
     = id:([a-zA-Z_][a-zA-Z0-9_]*) -> return "#{id.0}#{if id.1 then id.1.join "" else ""}"
 
 comment
-    = "#" comment_contents -> return ""
+    = "#" (!endline .)+ -> return ""
 
-comment_contents
-    = !endline . comment_contents
-    / !endline .
+space
+    = sp:[ \t]+ -> return sp.join ""
+
+endline
+    = end1:"\n" sp:space? end:endline -> return if options.inline then " " else "#{end1}#{sp}#{end}"
+    / "\n" -> return if options.inline then " " else "\n"
+

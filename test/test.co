@@ -11,7 +11,7 @@ optimist = require \optimist
     .describe \help, "You're staring at it"
 { argv } = optimist
 
-suite = require \vows ; .describe "Pwilang Test Suite"
+suite = require \vows .describe "Pwilang Test Suite"
 
 suite.addBatch do
     "Comments": do
@@ -19,10 +19,10 @@ suite.addBatch do
             equal "Hello", parse "Hello# World"
 
         "don't mess up strings": ->
-            equal "<div attr=\"#hepa\"></div>", parse "@div attr='#hepa'"
+            equal "<div attr=\"\#hepa\"></div>", parse "@div attr='\#hepa'"
 
         "don't interfere with id setting": ->
-            equal "<div id=\"id\">hey </div>", parse "@div #id hey # comment"
+            equal "<div id=\"id\">hey </div>", parse "@div \#id hey # comment"
 
     "Full line tags": do
         "take a full line": -> 
@@ -63,7 +63,7 @@ suite.addBatch do
             equal "<p>{{ foo }}</p>", parse "@p $foo", jinja: true
 
         "variables can be inside quoted attributes": ->
-            equal "<a title=\"{{ title }} hello\"></a>", parse "@a title='$title hello'", jinja: true
+            equal "<a title=\"{{ title }} hello\"></a>", parse "@a title=\"$title hello\"", jinja: true
 
         "variables can be unquoted attributes": ->
             equal "<a title=\"{{ title }}\"></a>", parse "@a title=$title", jinja: true
@@ -96,7 +96,7 @@ suite.addBatch do
             equal "<a class=\"c{{ c1 }} {{ c2 }}\"></a>", parse "@a .c$c1 .$c2", jinja: true
 
         "ids can have variables": ->
-            equal "<a id=\"{{ id }}\"></a>", parse "@a #$id", jinja: true
+            equal "<a id=\"{{ id }}\"></a>", parse "@a \#$id", jinja: true
 
         "attributes can have variables": ->
             equal "<a {{ a }}=\"{{ c }}\" {{ b }}></a>", parse "@a $a=$c \\$b", jinja: true
