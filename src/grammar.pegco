@@ -7,6 +7,10 @@
 ->
     options = arguments.2 ? {}
 
+    if options.jinja or options.jinja_tags
+        options.jinja_tags ?= eval "require('jinjs/lib/nodes').default_nodes"
+        { jinja_tags } = options
+
     current_indent = 0
 
     function set_indent (indent) ->
@@ -19,7 +23,15 @@
     function stack_block (block, spaceless) ->
         tag_stack.push block: block, indent: current_indent, spaceless: spaceless ? ""
 
-    function check_tag_stack ->
+    function get_jinja_end (tag) ->
+        sp = tag.spaceless
+        tag = jinja_tags[tag.name]
+        if tag? and tag.\until
+            return "{%#sp #{tag.\until} #sp%}"
+        else
+            return "" 
+
+    function check_tag_stack (opt_jinja_tag) ->
         res = ""
         top_tag = null
 
@@ -28,10 +40,15 @@
                 break
             top_tag = tag_stack.pop()
             if current_indent <= top_tag.indent
-                # Unstack the topmost tag because we have deindented  print
-                # its closing form : </tag> or its endblock
-                res += top_tag.tag.closing() if top_tag.tag
-                res += "{% end#{top_tag.block} #{top_tag.spaceless}%}" if top_tag.block
+                if top_tag.tag
+                    res += top_tag.tag.closing() 
+                else
+                    top = jinja_tags[top_tag.block]
+                    if not opt_jinja_tag? or not top.inside? or (top.inside? and opt_jinja_tag not in top.inside)
+                        res += "{%#{top_tag.spaceless} #{top.\until} #{top_tag.spaceless}%}"
+                    else
+                        tag_stack.push top_tag
+                        break
             else
                 tag_stack.push top_tag
                 break
@@ -131,12 +148,16 @@ line
         return res
 
     # When in jinja mode, try to parse a single line operator.
-    / &{ return options.jinja; } end:endline? sp:space? "%" endtag:"%"? spaceless:"-"? space? ident:identifier contents:anything? ->
+    / end:endline? sp:space? tag:jinja_tag contents:anything? ->
         set_indent sp.length
         sp = "" if options.inline
-        res = "#{check_tag_stack()}#{check_contents end}#{sp}{%#{spaceless} #{ident}#{contents} #{spaceless}%}"
-        if endtag
-            stack_block ident, spaceless
+        if sl == "-" then sl = "" else sl = "-"
+
+        res = "#{check_tag_stack(tag.name)}#{check_contents end}#{sp}{%- #{tag.name}#{contents} -%}"
+
+        if tag.name in jinja_tags and jinja_tags[tag.name].\until
+            stack_block tag.name, tag.spaceless
+
         return res
 
     # If there was no tag, just parse contents
@@ -202,6 +223,10 @@ tag_inline
     = tag:tag '[' sp:space? ']' -> return "#{tag.opening()}#{sp}#{tag.closing()}"
     / tag:tag '[' contents:anything_inline ']' -> return "#{tag.opening()}#{contents}#{tag.closing()}"
 
+/**
+    JINJA PART
+**/
+
 jinja_tag_contents
     = seq:(!endline a:.)+ -> if seq then return (item.1 for item of seq).join "" else return ""
 
@@ -217,15 +242,19 @@ jinja_tag_original
 
 jinja_tag_inline_eol
     = jinja_tag_original
-    / &{ return options.jinja; } "%" end:"%"? spaceless:"-"? space? ident:identifier contents:jinja_tag_contents? ->
-        endtag = if end then "{% end#{ident} #{spaceless}%}" else ""
-        return "{%#{spaceless} #{ident}#{contents} %}#{endtag}" if end
+    / tag:jinja_tag contents:jinja_tag_contents? ->
+        endtag = get_jinja_end tag
+        return "{%- #{tag.name}#{contents} -%}#{endtag}"
 
 jinja_tag_inline
     = jinja_tag_original
-    / &{ return options.jinja; } "%" end:"%"? spaceless:"-"? space? ident:identifier contents:jinja_tag_contents_inline? ->
-        endtag = if end then "{% end#{ident} #{spaceless}%}" else ""
-        return "{%#{spaceless} #{ident}#{contents} %}#{endtag}" if end
+    / tag:jinja_tag contents:jinja_tag_contents_inline? ->
+        endtag = get_jinja_end tag
+        return "{%- #{tag.name}#{contents} -%}#{endtag}"
+
+jinja_tag
+    = &{ return options.jinja; } "%" end:"%"? sl:"-"? space? ident:identifier ->
+        return { name: ident, spaceless: if sl == "-" then "" else "-" }
 
 selfclosing_tag
     = "@/" ident:identifier mods:modifiers? space? -> return Tag name: ident, mods: mods .selfclose()
@@ -282,7 +311,10 @@ variable_ident
     = id:([a-zA-Z_][a-zA-Z0-9_]*) -> return "#{id.0}#{if id.1 then id.1.join "" else ""}"
 
 comment
-    = "#" (!endline .)+ -> return ""
+    = "#" contents:(!endline a:. { return a; })* -> 
+        if options.jinja
+            return "{#- #{(contents or []).join ""} -#}"
+        return ""
 
 space
     = sp:[ \t]+ -> return sp.join ""
