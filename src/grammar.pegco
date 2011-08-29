@@ -289,7 +289,7 @@ unquoted_contents
 
 jinja_variable
     = &{ return options.jinja; } "$" ident:variable_ident cnt:variable_contents? -> return "{{ #{ident}#{cnt} }}"
-    / &{ return options.jinja; } "$(" cnt:variable_contents ")" -> return "{{ #{cnt} }}"
+    / &{ return options.jinja; } "$(" cnt:variable_any_paren ")" -> return "{{ #{cnt} }}"
 
 variable_contents
     = contents:(variable_contents_rec)+ -> return contents.join ""

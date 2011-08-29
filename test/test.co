@@ -82,6 +82,10 @@ suite.addBatch do
 
         "variables can be surrounded by parenthesis": ->
             equal "{{ v }}", parse "$(v)", jinja: true
+            equal "{{  v  }}", parse "$( v )", jinja: true
+
+        "variables in parenthesis allow for more complex expressions": ->
+            equal "{{ v + 1 }}", parse "$(v + 1)", jinja: true
 
         "variables can contain filters": ->
             equal "{{ v|f }}", parse "$v|f", jinja: true
