@@ -17,7 +17,7 @@ optimist = require "optimist"
 argv = optimist.argv
 
 fs = require "fs"
-sys = require "sys"
+util = require "util"
 grammar = require "./grammar"
 
 if argv.help
@@ -31,7 +31,7 @@ if argv._.length >= 1
             console.warn err.message
         else
             res = grammar.parse data, inline: argv.inline, jinja: argv.jinja
-            sys.print res
+            util.print res
 else
     process.stdin.resume()
     process.stdin.setEncoding "utf-8"
@@ -43,5 +43,5 @@ else
 
     # When read, process it.
     <- process.stdin.on "end"
-    sys.print grammar.parse data, inline: argv.inline, jinja: argv.jinja
+    util.print grammar.parse data, inline: argv.inline, jinja: argv.jinja
 

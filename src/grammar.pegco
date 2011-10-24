@@ -13,17 +13,17 @@
 
     current_indent = 0
 
-    function set_indent (indent) ->
+    function set_indent (indent)
         current_indent := indent
 
     tag_stack = []
-    function stack_tag (tag) ->
+    function stack_tag (tag)
         tag_stack.push tag: tag, indent: current_indent
 
-    function stack_block (block, spaceless) ->
+    function stack_block (block, spaceless)
         tag_stack.push block: block, indent: current_indent, spaceless: spaceless ? ""
 
-    function get_jinja_end (tag) ->
+    function get_jinja_end (tag)
         sp = tag.spaceless
         tag = jinja_tags[tag.name]
         if tag? and tag.\until
@@ -31,7 +31,7 @@
         else
             return "" 
 
-    function check_tag_stack (opt_jinja_tag) ->
+    function check_tag_stack (opt_jinja_tag)
         res = ""
         top_tag = null
 
@@ -55,13 +55,13 @@
 
         return res
 
-    function mod_class (ident) ->
+    function mod_class (ident)
         res = {}
         res[",class"] = [ ident ]
         return res
 
 
-    function merge_modifiers (prev, new_one) ->
+    function merge_modifiers (prev, new_one)
         # New one has priority
         if new_one[",class"]
             prev[",class"] = prev[",class"] or []
@@ -75,7 +75,7 @@
         return prev
 
 
-    function Tag (that) ->
+    function Tag (that)
 
         function format_modifiers (mods)
             s = ""
@@ -108,9 +108,9 @@
 
 
     last_content = null
-    function push_contents (contents) ->
+    function push_contents (contents)
         last_content := contents
-    function check_contents (end) ->
+    function check_contents (end)
         if not options.inline
             return end
 
