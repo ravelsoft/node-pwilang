@@ -3,7 +3,7 @@
     "description" : "Compiler for an alternative syntax to HTML. Best used with JinJS for template processing or just to write documents.",
     "keywords" : ["language", "compiler", "pwilang", "html", "xml", "jinjs"],
     "author" : "Christophe Eymard <christophe.eymard@ravelsoft.com> (http://www.ravelsoft.com)",
-    "version" : "0.3.5",
+    "version" : "0.3.6",
     "homepage" : "http://www.ravelsoft.com/",
     "repository" : {
         "type": "hg", 
