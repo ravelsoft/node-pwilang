@@ -123,6 +123,10 @@ suite.addBatch do
             equal "Hello {# World #}", parse "Hello {# World #}", jinja: true
             equal "end of comment #}", parse "end of comment #}", jinja: true
 
+        "jinja ifs can be imbricated": ->
+            equal "{%- if a -%}\n  {%- if b -%}\n  {%- else -%}{%- endif -%}\n{%- else -%}{%- endif -%}", parse "% if a\n  % if b\n  % else\n% else", jinja: true
+            
+
 if argv.help
     console.log optimist.usage()
     process.exit 0

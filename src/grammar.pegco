@@ -44,7 +44,7 @@
                     res += top_tag.tag.closing() 
                 else
                     top = jinja_tags[top_tag.block]
-                    if not opt_jinja_tag? or not top.inside? or (top.inside? and opt_jinja_tag not in top.inside)
+                    if not opt_jinja_tag? or not top.inside? or current_indent < top_tag.indent or (top.inside? and opt_jinja_tag not in top.inside)
                         res += "{%#{top_tag.spaceless} #{top.\until} #{top_tag.spaceless}%}"
                     else
                         tag_stack.push top_tag
@@ -152,7 +152,7 @@ line
         set_indent sp.length
         sp = "" if options.inline
         if sl == "-" then sl = "" else sl = "-"
-
+    
         res = "#{check_tag_stack(tag.name)}#{check_contents end}#{sp}{%- #{tag.name}#{contents} -%}"
 
         if tag.name in jinja_tags and jinja_tags[tag.name].\until
