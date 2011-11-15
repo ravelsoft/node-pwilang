@@ -13,23 +13,23 @@
 
     current_indent = 0
 
-    function set_indent (indent)
+    function set_indent(indent)
         current_indent := indent
 
     tag_stack = []
-    function stack_tag (tag)
+    function stack_tag(tag)
         tag_stack.push tag: tag, indent: current_indent
 
-    function stack_block (block, spaceless)
-        tag_stack.push block: block, indent: current_indent, spaceless: spaceless ? ""
+    function stack_block (block, spaceless ? "")
+        tag_stack.push block: block, indent: current_indent, spaceless: spaceless
 
-    function get_jinja_end (tag)
+    function get_jinja_end(tag)
         sp = tag.spaceless
         tag = jinja_tags[tag.name]
         if tag? and tag.\until
             return "{%#sp #{tag.\until} #sp%}"
         else
-            return "" 
+            return ""
 
     function check_tag_stack (opt_jinja_tag)
         res = ""
@@ -151,9 +151,9 @@ line
     / end:endline? sp:space? tag:jinja_tag contents:anything? ->
         set_indent sp.length
         sp = "" if options.inline
-        if sl == "-" then sl = "" else sl = "-"
-    
-        res = "#{check_tag_stack(tag.name)}#{check_contents end}#{sp}{%- #{tag.name}#{contents} -%}"
+        sl = tag.spaceless
+
+        res = "#{check_tag_stack(tag.name)}#{check_contents end}#{sp}{%#sl #{tag.name}#{contents} #sl%}"
 
         if tag.name in jinja_tags and jinja_tags[tag.name].\until
             stack_block tag.name, tag.spaceless
@@ -254,7 +254,7 @@ jinja_tag_inline
 
 jinja_tag
     = &{ return options.jinja; } "%" end:"%"? sl:"-"? space? ident:identifier ->
-        return { name: ident, spaceless: if sl == "-" then "" else "-" }
+        return { name: ident, spaceless: sl }
 
 selfclosing_tag
     = "@/" ident:identifier mods:modifiers? space? -> return Tag name: ident, mods: mods .selfclose()
