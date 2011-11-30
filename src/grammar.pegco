@@ -34,6 +34,7 @@
     function check_tag_stack (opt_jinja_tag)
         res = ""
         top_tag = null
+        first_popped = true
 
         while true
             if not tag_stack.length
@@ -41,10 +42,15 @@
             top_tag = tag_stack.pop()
             if current_indent <= top_tag.indent
                 if top_tag.tag
+                    if not first_popped and not options.inline
+                        res += "\n" + (" " * top_tag.indent)
                     res += top_tag.tag.closing() 
+                    first_popped = false
                 else
                     top = jinja_tags[top_tag.block]
                     if not opt_jinja_tag? or not top.inside? or current_indent < top_tag.indent or (top.inside? and opt_jinja_tag not in top.inside)
+                        if not options.inline
+                            res += "\n#{" " * top_tag.indent}"
                         res += "{%#{top_tag.spaceless} #{top.\until} #{top_tag.spaceless}%}"
                     else
                         tag_stack.push top_tag
