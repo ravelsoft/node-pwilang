@@ -5,7 +5,7 @@ pegco = require \pegco
 
 { TaskPool, walk } = require \rbuild
 
-{ argv }: optimist = require "optimist"
+optimist = require "optimist"
     .usage "Compile all the necessary files of the project."
     .boolean "help"
     .alias "help", "h"
@@ -14,6 +14,7 @@ pegco = require \pegco
     .boolean "watch"
     .alias "watch", "w"
     .describe "watch", "Watch the source files for changes, and recompile when changes are detected."
+argv = optimist.argv
 
 if argv.help
     console.log optimist.help!
